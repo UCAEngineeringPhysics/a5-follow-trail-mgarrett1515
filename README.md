@@ -83,7 +83,8 @@ $$
 > **Be careful, the symbols used in graph are different from our definitions.**
 > ![arc_length](images/arc-length-formula.png)
 
-### 2. (15%) Wiring
+### 2. (15%) Wiring![Screenshot 2025-12-13 214402](https://github.com/user-attachments/assets/f4e549b8-21db-4479-87d0-79c763c88c1e)
+
 Please upload your wiring diagram below to illustrate how the motors are controlled and monitored. 👇
 
 ![wiring](images/wiring_diagram.jpg)

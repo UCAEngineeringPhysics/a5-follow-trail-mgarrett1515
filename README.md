@@ -20,8 +20,21 @@ You can use following definitions in your equation:
 - Encoder's counts per revolution: $CPR$
 
 > Write down linear motion equation below. 👇
+> ### 1.1. Linear Motion Equation
 
+To find the target encoder counts $C$ for a distance $d$:
+
+$$
+C = \frac{d \cdot i \cdot CPR}{2 \pi r}
+$$
+
+**Where:**
+* $d$ = Desired linear distance
+* $i$ = Gear ratio (Motor revolutions per Wheel revolution)
+* $CPR$ = Encoder counts per revolution (of the motor shaft)
+* $r$ = Wheel radius
 > [!TIP]
+
 > If other quantities than the listed ones are needed.
 > Please introduce them in math language.
 
@@ -39,6 +52,31 @@ You can use following definitions in your equation:
 - Encoder's counts per revolution: $CPR$
 
 > Write down angular motion equation(s) below. 👇
+> ### 1.2. AngulaMotion Equation
+
+To find the target encoder counts $C_{l}$ (Left) and $C_{r}$ (Right) for a spin angle $\theta$ (in Radians):
+
+$$
+C_{magnitude} = \frac{\theta \cdot L \cdot i \cdot CPR}{4 \pi r}
+$$
+
+Since the wheels move in opposite directions to spin in place:
+
+$$
+C_{l} = - \frac{\theta \cdot L \cdot i \cdot CPR}{4 \pi r}
+$$
+
+$$
+C_{r} = + \frac{\theta \cdot L \cdot i \cdot CPR}{4 \pi r}
+$$
+
+**Where:**
+* $\theta$ = Desired angle in Radians
+* $L$ = Wheel axle length (Distance between wheels)
+* $i$ = Gear ratio
+* $CPR$ = Encoder counts per revolution
+* $r$ = Wheel radius
+
 
 > [!TIP]
 > You may find the calculation of arc length as illustrated below helpful.
@@ -51,7 +89,133 @@ Please upload your wiring diagram below to illustrate how the motors are control
 ![wiring](images/wiring_diagram.jpg)
 
 ### 3. (70%) Coding
+```
+from encoded_motor_driver import EncodedMotorDriver
+from time import sleep
+from machine import Pin
 
+# SETUP
+left_motor = EncodedMotorDriver((10,8,9), (16, 17))
+right_motor = EncodedMotorDriver((15,13,14), (18, 19))
+stby = Pin(12, Pin.OUT)
+stby.on()
+
+# LOOP
+
+start = True
+Checkpoint_1 = False
+Checkpoint_2 = False
+Checkpoint_3 = False
+Checkpoint_4 = False
+Finish = False
+FinishPart2 = False
+right_motor_distance = 0
+left_motor_distance = 0
+
+#axel distance is 134 mm
+#center point is at 134 / 2 = 67 mm
+
+
+def motor_in_range(distance, current_distance):
+    
+    inRange = current_distance - 15 < distance < current_distance + 15
+    return inRange
+    
+    
+
+while start == True:
+    right_motor_distance = (right_motor.encoder_counts / (98.5 * 28)) * 168
+    left_motor_distance = (left_motor.encoder_counts/ (98.5 * 28)) * 168
+    print(f"left_distance = {left_motor_distance}, right_distance = {right_motor_distance}")
+    if motor_in_range(750, right_motor_distance) and motor_in_range(750, left_motor_distance):
+        start = False
+        Checkpoint_1 = True
+        right_motor.stop() 
+        left_motor.stop()
+        sleep(3)
+        break
+    right_motor.forward(.25)
+    left_motor.forward(.265)
+    
+while Checkpoint_1 == True:
+    right_motor_distance = (right_motor.encoder_counts / (98.5 * 28)) * 168
+    left_motor_distance = (left_motor.encoder_counts/ (98.5 * 28)) * 168
+    print(f"left_distance = {left_motor_distance}, right_distance = {right_motor_distance}")
+    if motor_in_range(750 + 105, right_motor_distance) and motor_in_range(750 - 105, left_motor_distance):
+         Checkpoint_1 = False
+         Checkpoint_2 = True 
+         right_motor.stop() 
+         left_motor.stop()
+         sleep(1)
+         break
+    right_motor.forward(.25)
+    left_motor.backward(.265)
+while Checkpoint_2 == True:
+    right_motor_distance = (right_motor.encoder_counts / (98.5 * 28)) * 168
+    left_motor_distance = (left_motor.encoder_counts/ (98.5 * 28)) * 168
+    print(f"left_distance = {left_motor_distance}, right_distance = {right_motor_distance}")
+    if motor_in_range(750 + 105 + 500, right_motor_distance) and motor_in_range(750 - 105 + 500, left_motor_distance):
+        Checkpoint_2 = False
+        Checkpoint_3 = True
+        right_motor.stop() 
+        left_motor.stop()
+        sleep(3)
+        break
+    right_motor.forward(.25)
+    left_motor.forward(.265)
+while Checkpoint_3 == True:
+    right_motor_distance = (right_motor.encoder_counts / (98.5 * 28)) * 168
+    left_motor_distance = (left_motor.encoder_counts/ (98.5 * 28)) * 168
+    print(f"left_distance = {left_motor_distance}, right_distance = {right_motor_distance}")
+    if motor_in_range(750 + 105 + 500 - 316, right_motor_distance) and motor_in_range(750 - 105 + 500 + 316, left_motor_distance):
+        Checkpoint_3 = False
+        Checkpoint_4 = True
+        right_motor.stop() 
+        left_motor.stop()
+        sleep(1)
+        break
+    right_motor.backward(.25)
+    left_motor.forward(.265)
+while Checkpoint_4 == True:
+    right_motor_distance = (right_motor.encoder_counts / (98.5 * 28)) * 168
+    left_motor_distance = (left_motor.encoder_counts/ (98.5 * 28)) * 168
+    print(f"left_distance = {left_motor_distance}, right_distance = {right_motor_distance}")
+    if motor_in_range(750 + 105 + 500 - 316 + 500, right_motor_distance) and motor_in_range(750 - 105 + 500 + 316 + 500, left_motor_distance):
+        Checkpoint_4 = False
+        Finish = True
+        right_motor.stop() 
+        left_motor.stop()
+        sleep(3)
+        break
+    right_motor.forward(.25)
+    left_motor.forward(.265)
+while Finish == True:
+    right_motor_distance = (right_motor.encoder_counts / (98.5 * 28)) * 168
+    left_motor_distance = (left_motor.encoder_counts/ (98.5 * 28)) * 168
+    print(f"left_distance = {left_motor_distance}, right_distance = {right_motor_distance}")
+    if motor_in_range( 750 + 105 + 500 - 316 + 500 + 78, right_motor_distance) and motor_in_range(750 - 105 + 500 + 316 + 500 - 72, left_motor_distance):
+        Finish = False
+        FinishPart2 = True
+        right_motor.stop() 
+        left_motor.stop()
+        sleep(1)
+        break
+    right_motor.forward(.25)
+    left_motor.backward(.265)
+while FinishPart2 == True:
+    right_motor_distance = (right_motor.encoder_counts / (98.5 * 28)) * 168
+    left_motor_distance = (left_motor.encoder_counts/ (98.5 * 28)) * 168
+    print(f"left_distance = {left_motor_distance}, right_distance = {right_motor_distance}")
+    if motor_in_range( 750 + 105 + 500 - 316 + 500 + 78 + 559, right_motor_distance) and motor_in_range(750 - 105 + 500 + 316 + 500 - 78 + 559, left_motor_distance):
+        right_motor.stop()
+        left_motor.stop()
+        right_motor.stop() 
+        left_motor.stop()
+        sleep(3)
+        break
+    right_motor.forward(.25)
+    left_motor.forward(.265)
+```
 > [!IMPORTANT]
 >
 > - Please use math from [Plan Trajectories](#30-1-plan-trajectories) to code your robot.
